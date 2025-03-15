@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECG Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 40px;
+        }
+        textarea {
+            width: 80%;
+            height: 100px;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>ECG Classification</h2>
+    <p>Enter 187 comma-separated ECG values:</p>
+
+    <textarea id="ecgInput" placeholder="Enter values here..."></textarea>
+    <br>
+    <button onclick="classifyECG()">Classify ECG</button>
+
+    <div id="result"></div>
+
+    <script>
+        async function classifyECG() {
+            const inputField = document.getElementById("ecgInput");
+            const resultDiv = document.getElementById("result");
+
+            // Get user input and convert it to an array of numbers
+            let inputData = inputField.value.trim().split(",").map(Number);
+
+            // Validate that we have exactly 187 numbers
+            if (inputData.length !== 187) {
+                resultDiv.innerHTML = "<span style='color:red;'>Error: Please enter exactly 187 numbers.</span>";
+                return;
+            }
+
+            try {
+                // Send the input data to the FastAPI backend
+                const response = await fetch("http://127.0.0.1:8000/predict/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ data: inputData })
+                });
+
+                const result = await response.json();
+
+                // Display the prediction result
+                if (result.error) {
+                    resultDiv.innerHTML = "<span style='color:red;'>" + result.error + "</span>";
+                } else {
+                    resultDiv.innerHTML = "<span style='color:green;'>Prediction: " + result.prediction + "</span>";
+                }
+            } catch (error) {
+                resultDiv.innerHTML = "<span style='color:red;'>Error: Unable to connect to the server.</span>";
+            }
+        }
+    </script>
+
+</body>
+</html>
